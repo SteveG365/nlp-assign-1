@@ -88,7 +88,15 @@ def normalise_numbers(text):
             result.append(text[i])
             i += 1
     return "".join(result)
-            
+
+def add_start_end_tokens(sentences):
+    
+    for i in range(len(sentences)):
+        sentences[i] = "^^" + sentences[i] + "$"
+
+    return sentences
+
+
 def normalise_spaces(sentences):
     """
     A function that just strips the sentence of any spaces we
@@ -122,7 +130,10 @@ def normalise_text(text):
 
     #strip any additave spaces
     sentences = normalise_spaces(sentences)
-    
+
+    # add start stop tokens
+    sentences = add_start_end_tokens(sentences)
+
     return sentences
 
 if __name__ == "__main__":
