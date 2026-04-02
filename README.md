@@ -2,6 +2,19 @@
 # Natural Language Processing
 # Steven Glass
 
+List of packages
+
+  - python=3.12
+  - ipykernel
+  - jupyterlab
+  - matplotlib
+  - numpy
+  - pandas
+  - re
+  - unicodedata
+
+
+
 ## How to run this code
 
 Main reproducible environment:
