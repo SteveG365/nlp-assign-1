@@ -5,7 +5,15 @@
 import re
 import unicodedata
 
-punctuation_to_remove = [".", ",", "?", "!", ";", ":", "\"", "\'"]
+punctuation_to_remove = [
+    ".", ",", "!", "?", ";", ":",  # punctuation
+    "'", '"', "`", "’", "“", "”",  # quotes/apostrophes
+    "(", ")", "[", "]", "{", "}",  # brackets
+    "-", "—", "_",                 # dashes/underscores
+    "/", "\\",                     # slashes
+    "@", "#", "$", "%", "^", "&", "*",  # symbols
+    "+", "=", "<", ">", "|", "~"
+]
 
 def normalise_cap_space(text: str) -> str:
     """
@@ -65,7 +73,8 @@ def normalise_diacritics(text):
 def normalise_numbers(text):
     """
     Function that normalises the numbers in the text.
-    Method looks for numbers, and replaces with the <NUM> token
+    Method looks for numbers, and replaces with a 0-token to-
+    represent numbers
     """
     result = []
     i = 0
@@ -74,7 +83,7 @@ def normalise_numbers(text):
             # keep scanning for nums
             while i < len(text) and text[i].isdigit():
                 i +=1
-            result.append("<NUM>")
+            result.append("0")
         else:
             result.append(text[i])
             i += 1
