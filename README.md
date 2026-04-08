@@ -26,3 +26,10 @@ You must create and activate the environment from the YAML file as follows
 conda env create -f environment.yml
 conda activate nlp-assign1
 ```
+
+### Run Trigram test
+
+python -m scripts.run_trigram --file_name data/train.en.txt --seed 42
+
+### Run BPE test
+

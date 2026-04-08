@@ -1,9 +1,8 @@
 
-from normalisation import normalise_text
 import numpy as np
 import random
 
-def calculate_counts(train_sentences):
+def calculate_trigram_counts(train_sentences):
     """
     Function that slides over the entire training corpus -
     computes the total number of times a letter x follows previous two
@@ -19,9 +18,10 @@ def calculate_counts(train_sentences):
                 if char in counts[prefix]:
                     counts[prefix][char] += 1   # incr
                 else:
-                    counts[prefix][char] = 0    # init
+                    counts[prefix][char] = 1    # init
             else:
                 counts[prefix] = {}             # init
+                counts[prefix][char] = 1
     return counts
 
 def calculate_history_counts(counts):
@@ -37,6 +37,51 @@ def calculate_history_counts(counts):
 
     return history_counts
 
+def calculate_continuation_counts(train_sentences):
+    """
+    continuation_counts[char] = number of unique previous chars that precede char
+
+    For Kneser-Ney lower-order distribution:
+        P_cont(char) = continuation_counts[char] / total_unique_bigrams
+    """
+    previous_sets = {}
+
+    for sentence in train_sentences:
+        for i in range(len(sentence) - 1):
+            prev_char = sentence[i]
+            char = sentence[i+1]
+
+            if char not in previous_sets:
+                previous_sets[char] = set()
+
+            previous_sets[char].add(prev_char)
+
+    continuation_counts = {}
+    for char in previous_sets:
+        continuation_counts[char] = len(previous_sets[char])
+
+    total_unique_bigrams = sum(continuation_counts.values())
+
+    return continuation_counts, total_unique_bigrams
+
+
+def calculate_bigram_counts(train_sentences):
+    """
+    bigram_counts[prev_char][char] = number of times char follows prev_char
+    """
+    bigram_counts = {}
+
+    for sentence in train_sentences:
+        for i in range(len(sentence) - 1):
+            prev_char = sentence[i]
+            char = sentence[i+1]
+
+            if prev_char not in bigram_counts:
+                bigram_counts[prev_char] = {}
+
+            bigram_counts[prev_char][char] = bigram_counts[prev_char].get(char, 0) + 1
+
+    return bigram_counts
 
 class TrigramModel:
 
@@ -44,22 +89,40 @@ class TrigramModel:
     def fit(self, train_sentences):
         """Estimate trigram counts/probabilities from training texts."""
         
-        self.counts = calculate_counts(train_sentences)
+        self.counts = calculate_trigram_counts(train_sentences)
         self.history_counts = calculate_history_counts(self.counts)
+
+        self.bigram_counts = {}
+        self.continuation_counts = {}
+        self.total_unique_bigrams = 0
         
 
-    def get_probability(self, prefix, char):
+    def get_probability(self, prefix, char, D = 0.75):
         """
         Fetches the relevant probability p(char | prefix) and -
         uses Kneser Ney smoothing to steal from the rich and give to the poor
         """
-        count = self.counts[prefix].get(char, 0)
+
+        count = self.counts.get(prefix, {}).get(char, 0)
         total = self.history_counts.get(prefix, 0)
 
-        if total == 0:
-            return 1e-12
+        if total > 0:
+            unique_continuations = len(self.counts[prefix])
+            lambda_weight = (D * unique_continuations) / total
+            trigram_part = max(count - D, 0) / total
+        else:
+            trigram_part = 0.0
+            lambda_weight = 1.0
 
-        prob = count / total
+        continuation_count = self.continuation_counts.get(char, 0)
+
+        if self.total_unique_bigrams > 0:
+            lower_order_prob = continuation_count / self.total_unique_bigrams
+        else:
+            lower_order_prob = 1e-12
+
+        prob = trigram_part + lambda_weight * lower_order_prob
+        
         return max(prob, 1e-12)
 
     def perplexity(self, sentences):
@@ -75,14 +138,14 @@ class TrigramModel:
                 prefix = sentence[i:i+2]
                 char = sentence[i + 2]
 
-            prob = self.get_probability(prefix, char)
+                prob = self.get_probability(prefix, char)
 
-            # avoid log(0)
-            if prob == 0:
-                return float("inf")
+                # avoid log(0)
+                if prob == 0:
+                    return float("inf")
 
-            log_prob_sum += np.log(prob)
-            n_predictions += 1
+                log_prob_sum += np.log(prob)
+                n_predictions += 1
 
         if n_predictions == 0:
             return float("inf")
@@ -114,22 +177,6 @@ class TrigramModel:
         return "".join(output[2:])
 
 
-if __name__ == "__main__":
-    with open("../data/raw/train.en.txt") as f:
-        text = f.read()
 
-    sentences = normalise_text(text)
-
-    #print(calculate_counts(sentences))
-    trigram_model = TrigramModel()
-
-    trigram_model.fit(sentences)
-
-    perplexity = trigram_model.perplexity(sentences)
-
-    gen_text = trigram_model.generate(seed_text=42)
-
-    print(f"Model Perplexity: {perplexity}")
-    print(gen_text)
 
     

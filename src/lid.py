@@ -23,5 +23,6 @@ def load_test_sentences(path):
     Read labeled test data file into structured examples.
     """
     pass
+
 if __name__ == "__main__":
     pass
