@@ -131,9 +131,6 @@ class TrigramModel:
         n_predictions = 0
         for sentence in sentences:
             # sliding 3 window over whole text
-
-            # compute p(char | prefix) using Kneser Ney Smoothing
-
             for i in range(len(sentence)-2):
                 prefix = sentence[i:i+2]
                 char = sentence[i + 2]

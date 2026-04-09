@@ -16,7 +16,7 @@ class BPETokenLearner:
         for _ in range(self.num_merges):
             # count the frequencies
             counts = self.get_pair_frequencies(tok_sentences)
-            best_pair = max(counts)
+            best_pair = max(counts, key=counts.get)
             tok_sentences = self.merge_best_pair(tok_sentences, best_pair)
 
             # record merge history

@@ -15,12 +15,6 @@ punctuation_to_remove = [
     "+", "=", "<", ">", "|", "~"
 ]
 
-def normalise_cap_space(text: str) -> str:
-    """
-    Function that returns the text lower-cased -
-    and stripped of all leading/tailing whitespace
-    """
-    return text.lower().strip()
 
 def normalise_punc(sentences):
     """
@@ -135,6 +129,49 @@ def normalise_text(text):
     sentences = add_start_end_tokens(sentences)
 
     return sentences
+
+def normalise_test_data(text):
+    """
+    A function that applies the same normalisation that we apply to the training
+    data, but accounts for the initial 2 chars.
+    Returns: test_sentences: a list of each test sentence normalised
+             labels: the language each testing sentence is actually from
+    """
+    # first lower case the text
+    text = text.lower()
+
+    #normalise for numbers
+    text = normalise_numbers(text)
+
+    #normalise diacritics
+    text = normalise_diacritics(text)
+
+    # split the sentences
+    sentences = re.split(r'\n', text)
+
+    # extract the language label
+
+    # normalise punctuation
+    sentences = normalise_punc(sentences)
+
+    #strip any additave spaces
+    sentences = normalise_spaces(sentences)
+
+    # filter out any empty sentences
+    labels = []
+    test_sentences = []
+    for s in sentences:
+        label = s[:2]
+        sentence = s[3:]
+
+        if sentence.strip():
+            labels.append(label)
+            test_sentences.append(sentence)
+
+    # add start stop tokens
+    test_sentences = add_start_end_tokens(test_sentences)
+
+    return test_sentences, labels
 
 if __name__ == "__main__":
     #load example text
