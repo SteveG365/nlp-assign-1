@@ -1,13 +1,9 @@
 name: nlp-assign1
 channels:
-  - defaults
-  - https://repo.anaconda.com/pkgs/main
-  - https://repo.anaconda.com/pkgs/r
+  - pytorch
+  - conda-forge
 dependencies:
   - python=3.12
   - ipykernel
   - jupyterlab
-  - matplotlib
   - numpy
-  - pandas
-prefix: /opt/anaconda3/envs/nlp-assign1
